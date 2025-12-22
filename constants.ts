@@ -1,14 +1,27 @@
 
-
-
-
-
-
-
-
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export const CO_SCHOLASTIC_AREAS = ['General', 'Affective Traits', 'Psychomotor Skills'];
+
+export const GRADE_ORDER = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+
+export const CLASS_SHORT_NAMES: Record<string, string> = {
+  'Nursery': 'NUR',
+  'LKG': 'LKG',
+  'UKG': 'UKG',
+  '1': 'C1',
+  '2': 'C2',
+  '3': 'C3',
+  '4': 'C4',
+  '5': 'C5',
+  '6': 'C6',
+  '7': 'C7',
+  '8': 'C8',
+  '9': 'C9',
+  '10': 'C10',
+  '11': 'C11',
+  '12': 'C12'
+};
 
 export const INITIAL_MASTER_DATA = {
   classes: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
@@ -51,6 +64,10 @@ export const INITIAL_MASTER_DATA = {
        { name: 'Art', type: 'Optional' }
     ]
   } as Record<string, any[]>,
+  classSections: {
+    '5': ['A', 'B', 'C', 'D'],
+    '3': ['A', 'B']
+  } as Record<string, string[]>,
   coScholasticSubjects: {
     'General': ['Work Education', 'Art Education', 'Health & Physical Education'],
     'Affective Traits': ['Discipline', 'Cleanliness', 'Respect', 'Punctuality'],
@@ -60,14 +77,17 @@ export const INITIAL_MASTER_DATA = {
     '10': ['General', 'Affective Traits'],
     '5': ['General', 'Psychomotor Skills']
   } as Record<string, string[]>,
-  examSchedules: [] as any[] // Initialized as empty array
+  examSchedules: [] as any[]
 };
 
 export const DEFAULT_SETTINGS = {
-  idPrefix: 'google_studio_3',
+  idType: 'Numeric' as const,
+  idPrefix: 'ES',
   idSeparator: '-',
-  idStartNumber: 104, // Started from 104 as 101-103 are demo
+  idStartNumber: 104,
   idPadding: 3,
+  includeClassInId: false,
+  includeDateInId: false
 };
 
 export const INITIAL_SCHOOL_PROFILE = {
@@ -138,8 +158,8 @@ export const INITIAL_STUDENT_FORM = {
 
 export const DEMO_STUDENTS = [
   {
-    id: 'google_studio_3-101',
-    admissionNumber: 'google_studio_3-101',
+    id: 'ES-101',
+    admissionNumber: 'ES-101',
     admissionDate: '2025-04-01',
     admissionSessionId: '2',
     rollNo: '01',
@@ -192,8 +212,8 @@ export const DEMO_STUDENTS = [
     }
   },
   {
-    id: 'google_studio_3-102',
-    admissionNumber: 'google_studio_3-102',
+    id: 'ES-102',
+    admissionNumber: 'ES-102',
     admissionDate: '2025-04-02',
     admissionSessionId: '2',
     rollNo: '02',
@@ -246,8 +266,8 @@ export const DEMO_STUDENTS = [
     }
   },
   {
-    id: 'google_studio_3-103',
-    admissionNumber: 'google_studio_3-103',
+    id: 'ES-103',
+    admissionNumber: 'ES-103',
     admissionDate: '2025-04-05',
     admissionSessionId: '2',
     rollNo: '01',

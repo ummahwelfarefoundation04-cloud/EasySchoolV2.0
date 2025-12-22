@@ -737,6 +737,7 @@ const ExamModule: React.FC<ExamModuleProps> = ({ students, masterData, schoolPro
                                      <Edit2 size={16} />
                                    </button>
                                    <button 
+                                     // Fix: Use 'exam.name' from the iterator as 'examName' was undefined
                                      onClick={() => handleDeleteExamFromTerm(exam.name)}
                                      className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition"
                                      title="Delete Exam"
@@ -1932,15 +1933,17 @@ const ExamModule: React.FC<ExamModuleProps> = ({ students, masterData, schoolPro
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                <div>
-                  <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="w-full border rounded p-2 text-sm">
+                  <select value={selectedClass} onChange={(e) => { setSelectedClass(e.target.value); setSelectedSection(''); }} className="w-full border rounded p-2 text-sm">
                      <option value="">-- Select Class --</option>
                      {masterData.classes.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                </div>
                <div>
                   <select value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} className="w-full border rounded p-2 text-sm">
-                     <option value="">All Sections</option>
-                     {masterData.sections.map(s => <option key={s} value={s}>{s}</option>)}
+                     <option value="">{selectedClass ? 'All Allowed Sections' : 'All Sections'}</option>
+                     {(selectedClass ? (masterData.classSections[selectedClass] || masterData.sections) : masterData.sections).map(s => (
+                        <option key={s} value={s}>{s}</option>
+                     ))}
                   </select>
                </div>
                <div>

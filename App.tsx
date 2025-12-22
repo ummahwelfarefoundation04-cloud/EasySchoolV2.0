@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DEFAULT_SESSIONS, DEFAULT_SETTINGS, INITIAL_MASTER_DATA, INITIAL_SCHOOL_PROFILE, INITIAL_STUDENT_FORM, DEMO_STUDENTS } from './constants';
 import { Student, Session, Settings as SettingsType, MasterData, SchoolProfile } from './types';
 import AdmissionForm from './components/AdmissionForm';
@@ -7,18 +7,45 @@ import StudentList from './components/StudentList';
 import ExamModule from './components/ExamModule';
 import { LayoutDashboard, UserPlus, Users, Settings as SettingsIcon, GraduationCap, Calendar, ArrowRight, ClipboardList } from 'lucide-react';
 
+// Keys for LocalStorage
+const STORAGE_KEYS = {
+  STUDENTS: 'es_students',
+  SESSIONS: 'es_sessions',
+  SETTINGS: 'es_settings',
+  PROFILE: 'es_profile',
+  MASTER_DATA: 'es_master_data'
+};
+
+// Helper to load data or fallback to default
+const loadState = (key: string, fallback: any) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch (e) {
+    console.error(`Error loading ${key}`, e);
+    return fallback;
+  }
+};
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'admission' | 'students' | 'exams' | 'settings'>('dashboard');
   
-  // App State
-  const [sessions, setSessions] = useState<Session[]>(DEFAULT_SESSIONS);
-  const [settings, setSettings] = useState<SettingsType>(DEFAULT_SETTINGS);
-  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>(INITIAL_SCHOOL_PROFILE);
-  const [masterData, setMasterData] = useState<MasterData>(INITIAL_MASTER_DATA);
-  const [students, setStudents] = useState<Student[]>(DEMO_STUDENTS as Student[]);
+  // App State with Persistence
+  const [sessions, setSessions] = useState<Session[]>(() => loadState(STORAGE_KEYS.SESSIONS, DEFAULT_SESSIONS));
+  const [settings, setSettings] = useState<SettingsType>(() => loadState(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS));
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>(() => loadState(STORAGE_KEYS.PROFILE, INITIAL_SCHOOL_PROFILE));
+  const [masterData, setMasterData] = useState<MasterData>(() => loadState(STORAGE_KEYS.MASTER_DATA, INITIAL_MASTER_DATA));
+  const [students, setStudents] = useState<Student[]>(() => loadState(STORAGE_KEYS.STUDENTS, DEMO_STUDENTS as Student[]));
   
   // Edit State
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+
+  // Persistence Effects
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions)); }, [sessions]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(schoolProfile)); }, [schoolProfile]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.MASTER_DATA, JSON.stringify(masterData)); }, [masterData]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students)); }, [students]);
 
   const handleSaveStudent = (student: Student) => {
     if (editingStudent) {
@@ -48,6 +75,13 @@ const App: React.FC = () => {
   const handleCancelAdmission = () => {
     setEditingStudent(null);
     setActiveTab('dashboard');
+  };
+
+  const handleFactoryReset = () => {
+    if (window.confirm("WARNING: This will delete ALL stored data (Students, Exams, Settings) and reset the app to default demo data. This cannot be undone.\n\nAre you sure?")) {
+      localStorage.clear();
+      window.location.reload();
+    }
   };
 
   const handleImportStudents = (importedData: any[]) => {
@@ -128,6 +162,7 @@ const App: React.FC = () => {
             onUpdateSessions={setSessions}
             onUpdateMasterData={setMasterData}
             onImportStudents={handleImportStudents}
+            onFactoryReset={handleFactoryReset}
           />
         );
       case 'students':

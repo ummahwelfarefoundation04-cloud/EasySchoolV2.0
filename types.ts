@@ -1,5 +1,4 @@
 
-
 export interface Session {
   id: string;
   name: string; // e.g., "2025-2026"
@@ -7,10 +6,13 @@ export interface Session {
 }
 
 export interface Settings {
-  idPrefix: string; // e.g., "google_studio_3"
+  idType: 'Numeric' | 'Pattern';
+  idPrefix: string; // e.g., "ES"
   idSeparator: string; // e.g., "-", "/"
   idStartNumber: number; // e.g., 101
   idPadding: number; // e.g., 3 (for 001)
+  includeClassInId: boolean;
+  includeDateInId: boolean;
 }
 
 export interface SchoolProfile {
@@ -59,7 +61,7 @@ export interface ClassExamSchedule {
 
 export interface MasterData {
   classes: string[];
-  sections: string[];
+  sections: string[]; // Global pool of sections (A, B, C...)
   categories: string[];
   houses: string[];
   religions: string[];
@@ -68,6 +70,7 @@ export interface MasterData {
   termExams: Record<string, ExamDefinition[]>; // Mapping: Term Name -> List of Exams with Marks & Subjects
   termCoScholasticAreas: Record<string, string[]>; // Mapping: Term Name -> List of Co-Scholastic Areas
   classSubjects: Record<string, ClassSubject[]>; // Mapping: Class Name -> List of Subjects
+  classSections: Record<string, string[]>; // New Mapping: Class Name -> List of Section Names
   coScholasticSubjects: Record<string, string[]>; // Mapping: Area Name -> List of Subjects
   classCoScholasticAreas: Record<string, string[]>; // Mapping: Class Name -> List of Assigned Areas
   examSchedules: ClassExamSchedule[]; // List of created exam schedules

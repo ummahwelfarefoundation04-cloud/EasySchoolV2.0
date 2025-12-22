@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Settings, Session, Student, Document, GuardianType, Gender, MasterData, ClassSubject } from '../types';
-import { BLOOD_GROUPS, INITIAL_STUDENT_FORM } from '../constants';
+import { BLOOD_GROUPS, INITIAL_STUDENT_FORM, CLASS_SHORT_NAMES } from '../constants';
 import { generateStudentSummary } from '../services/geminiService';
 import { Upload, FileText, User, Sparkles, Save, X, Camera, BookOpen, HelpCircle, RefreshCw, Lock, Unlock, Search } from 'lucide-react';
 import ImageCropper from './ImageCropper';
@@ -32,55 +32,75 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
   const [isGeneratingNote, setIsGeneratingNote] = useState(false);
   const [availableSubjects, setAvailableSubjects] = useState<ClassSubject[]>([]);
   const [subjectSearch, setSubjectSearch] = useState('');
+  const [allowedSections, setAllowedSections] = useState<string[]>([]);
   
   // Cropper State
   const [croppingImage, setCroppingImage] = useState<string | null>(null);
   const [croppingField, setCroppingField] = useState<string | null>(null);
 
-  // Function to generate ID based on settings
-  const generateId = () => {
+  // Helper to format date for ID: Jan25, Apr25
+  const formatDateForId = (dateString: string) => {
+    if (!dateString) return 'Date';
+    const date = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]}${date.getFullYear().toString().slice(-2)}`;
+  };
+
+  // Improved reactive ID generator
+  const getDynamicId = useCallback((className: string, admissionDate: string) => {
     const pad = (num: number, size: number) => {
       let s = num + "";
       while (s.length < size) s = "0" + s;
       return s;
     };
-    return `${settings.idPrefix}${settings.idSeparator}${pad(settings.idStartNumber, settings.idPadding)}`;
-  };
 
-  // Initialize form with existing data if available (Edit Mode)
+    const parts = [settings.idPrefix];
+    const sep = settings.idSeparator;
+
+    if (settings.idType === 'Pattern') {
+      if (settings.includeClassInId) {
+        const shortClass = CLASS_SHORT_NAMES[className] || className || 'CLS';
+        parts.push(shortClass);
+      }
+      if (settings.includeDateInId) {
+        parts.push(formatDateForId(admissionDate));
+      }
+    }
+
+    parts.push(pad(settings.idStartNumber, settings.idPadding));
+    return parts.filter(Boolean).join(sep);
+  }, [settings]);
+
+  // Initialize form
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
       setGeneratedId(initialData.id);
-      setIsIdManual(true); // Treat existing IDs as manual so they don't get overwritten
+      setIsIdManual(true);
     } else {
-      if (!isIdManual) {
-        setGeneratedId(generateId());
-      }
-      
-      // Reset form to initial state but preserve the generated ID
       setFormData((prev: any) => ({
         ...INITIAL_STUDENT_FORM,
         admissionSessionId: sessions.find(s => s.isCurrent)?.id || ''
       }));
     }
-  }, [settings, sessions, initialData]);
+  }, [sessions, initialData]);
 
-  // Regenerate ID if settings change and not in manual mode
+  // Handle auto ID updates when class or date changes
   useEffect(() => {
     if (!initialData && !isIdManual) {
-      setGeneratedId(generateId());
+      const newId = getDynamicId(formData.class, formData.admissionDate);
+      setGeneratedId(newId);
     }
-  }, [settings, isIdManual]);
+  }, [formData.class, formData.admissionDate, getDynamicId, initialData, isIdManual]);
 
-  // Update available subjects when Class changes
+  // Update available subjects and sections when Class changes
   useEffect(() => {
     if (formData.class) {
+      // Handle Subjects
       const classSubjects = masterData.classSubjects?.[formData.class] || [];
       setAvailableSubjects(classSubjects);
       setSubjectSearch('');
       
-      // If NOT editing existing student (or if subject list is empty), auto-select mandatory subjects
       if (!initialData || formData.subjects.length === 0) {
         const mandatorySubjects = classSubjects
           .filter(s => s.type === 'Mandatory')
@@ -91,11 +111,21 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           subjects: [...new Set([...(prev.subjects || []), ...mandatorySubjects])]
         }));
       }
+
+      // Handle Sections (Now logically sorted)
+      const sections = [...(masterData.classSections?.[formData.class] || masterData.sections || [])].sort();
+      setAllowedSections(sections);
+      
+      // Clear selected section if it's no longer allowed
+      if (formData.section && !sections.includes(formData.section)) {
+        setFormData((prev: any) => ({ ...prev, section: '' }));
+      }
     } else {
       setAvailableSubjects([]);
+      setAllowedSections([]);
       setSubjectSearch('');
     }
-  }, [formData.class, masterData.classSubjects, initialData]);
+  }, [formData.class, masterData.classSubjects, masterData.classSections, masterData.sections, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -110,8 +140,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
         newData[name] = value;
       }
 
-      // Auto-populate Parent Login ID from Mobile
-      // If Login ID is empty OR matches the previous mobile (indicating they are synced), update it.
       if (name === 'mobile') {
         if (!prev.parentLoginId || prev.parentLoginId === prev.mobile) {
           newData.parentLoginId = value;
@@ -138,11 +166,8 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Open Cropper
         setCroppingImage(reader.result as string);
         setCroppingField(field);
-        
-        // Reset input so same file can be selected again
         e.target.value = '';
       };
       reader.readAsDataURL(file);
@@ -184,26 +209,20 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
   };
 
   const generateCredentials = () => {
-     // Generate Login ID if empty: Use Mobile or Father's Phone
      let loginId = formData.parentLoginId;
      if (!loginId) {
         loginId = formData.mobile || formData.father.phone || `P${generatedId}`;
      }
-     
-     // Generate Password if empty: Random 6 char string
      let password = formData.parentLoginPassword;
      if (!password) {
         password = Math.random().toString(36).slice(-8);
      }
-     
      return { loginId, password };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     const { loginId, password } = generateCredentials();
-
     const studentData: Student = {
       ...formData,
       id: generatedId,
@@ -216,11 +235,9 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
 
   const toggleIdMode = () => {
     if (isIdManual) {
-      // Switching to Auto: Regenerate
       setIsIdManual(false);
-      setGeneratedId(generateId());
+      setGeneratedId(getDynamicId(formData.class, formData.admissionDate));
     } else {
-      // Switching to Manual: Keep current value but make editable
       setIsIdManual(true);
     }
   };
@@ -228,7 +245,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
   return (
     <div className="bg-white rounded-lg shadow-xl overflow-hidden relative">
       
-      {/* Cropper Modal */}
       {croppingImage && (
         <ImageCropper 
           imageSrc={croppingImage} 
@@ -252,7 +268,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
 
       <form id="admissionForm" onSubmit={handleSubmit} className="p-6 space-y-8">
         
-        {/* Academic Details */}
         <section>
           <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
             <FileText size={20} /> Academic Details
@@ -307,8 +322,8 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
              <div className="col-span-1">
                 <label className="block text-sm font-medium text-slate-600 mb-1">Section</label>
                 <select name="section" value={formData.section} onChange={handleChange} className="w-full border rounded p-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none" required>
-                  <option value="">Select Section</option>
-                  {masterData.sections.map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="">{formData.class ? 'Select Section' : '-- Select Class First --'}</option>
+                  {allowedSections.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
              </div>
              <div className="col-span-1">
@@ -336,7 +351,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           </div>
         </section>
 
-        {/* Subjects Section - Shows only if class is selected */}
         {formData.class && (
           <section className="bg-slate-50 p-4 rounded border border-slate-200">
              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
@@ -416,7 +430,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           </section>
         )}
 
-        {/* Student Profile */}
         <section>
           <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
             <User size={20} /> Student Personal Details
@@ -495,7 +508,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           </div>
         </section>
 
-        {/* Parent Details */}
         <section>
           <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 mb-4">Parent / Guardian Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -594,7 +606,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           )}
         </section>
 
-        {/* Addresses & IDs */}
         <section>
           <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 mb-4">Address & Identification</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -626,7 +637,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           </div>
         </section>
 
-        {/* Previous School */}
         <section>
           <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 mb-4">Previous School Record</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -641,7 +651,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
            </div>
         </section>
 
-        {/* Note & Documents */}
         <section>
           <h3 className="text-lg font-semibold text-slate-700 border-b pb-2 mb-4">Notes & Documents</h3>
           <div className="grid grid-cols-1 gap-4">
@@ -683,7 +692,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ settings, sessions, maste
           </div>
         </section>
 
-        {/* Parent Login */}
         <section className="bg-blue-50 p-6 rounded-lg border border-blue-100">
            <h3 className="text-lg font-semibold text-blue-800 mb-4">Parent Login Credentials</h3>
            <p className="text-xs text-blue-600 mb-4">These credentials will be auto-generated if left blank. Admins can view these in the Student List.</p>
