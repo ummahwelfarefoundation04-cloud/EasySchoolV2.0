@@ -56,35 +56,44 @@ const Settings: React.FC<SettingsProps> = ({
 
   const handleSaveSettings = () => {
     onUpdateSettings(localSettings);
-    showNotification('ID Configuration Saved!');
+    alert('✅ ID Configuration Saved successfully.');
   };
   
   const handleSaveProfile = () => {
     onUpdateSchoolProfile(localProfile);
-    showNotification('School Profile Saved!');
-  };
-
-  const showNotification = (msg: string) => {
-      alert(msg);
+    alert('✅ School Profile Saved successfully.');
   };
 
   const handleAddSession = () => {
-    if (!newSessionName) return;
+    const trimmedName = newSessionName.trim();
+    if (!trimmedName) return;
+    
+    // Uniqueness check for sessions
+    if (sessions.some(s => s.name === trimmedName)) {
+      alert(`⚠️ Session "${trimmedName}" already exists.`);
+      return;
+    }
+
     const newSession: Session = {
       id: Date.now().toString(),
-      name: newSessionName,
+      name: trimmedName,
       isCurrent: false
     };
     onUpdateSessions([...sessions, newSession]);
     setNewSessionName('');
+    alert(`✅ Session "${trimmedName}" added.`);
   };
 
   const handleDeleteSession = (id: string) => {
     if (sessions.length <= 1) {
-      alert("Cannot delete the only session.");
+      alert("⚠️ Cannot delete the only session available. System needs at least one session.");
       return;
     }
-    onUpdateSessions(sessions.filter(s => s.id !== id));
+    const session = sessions.find(s => s.id === id);
+    if (window.confirm(`⚠️ WARNING: Delete academic session "${session?.name}"?\n\nThis will make all students associated with this session disconnected from their records.`)) {
+      onUpdateSessions(sessions.filter(s => s.id !== id));
+      alert(`🗑️ Session "${session?.name}" deleted.`);
+    }
   };
 
   const handleSetCurrentSession = (id: string) => {
@@ -93,6 +102,8 @@ const Settings: React.FC<SettingsProps> = ({
       isCurrent: s.id === id
     }));
     onUpdateSessions(updated);
+    const sessionName = sessions.find(s => s.id === id)?.name;
+    alert(`📅 Active session set to: ${sessionName}`);
   };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -111,7 +122,6 @@ const Settings: React.FC<SettingsProps> = ({
     }
   };
 
-  // Robust class sorting: standard grades first, then custom alphabetically
   const sortClasses = (classes: string[]) => {
     return [...classes].sort((a, b) => {
       const idxA = GRADE_ORDER.indexOf(a);
@@ -130,24 +140,24 @@ const Settings: React.FC<SettingsProps> = ({
     if (!value && key !== 'sections') return;
 
     const currentList = masterData[key] as string[];
+    const newValue = value.trim();
     
     // Uniqueness Check
     const isDuplicate = currentList.some((item, idx) => 
-      item.toLowerCase() === value.trim().toLowerCase() && (editingKey !== key || editingIndex !== idx)
+      item.toLowerCase() === newValue.toLowerCase() && (editingKey !== key || editingIndex !== idx)
     );
 
     if (isDuplicate) {
-        alert(`"${value}" already exists in ${key}. Value must be unique.`);
+        alert(`⚠️ Duplicate Error: "${newValue}" already exists in ${key}.`);
         return;
     }
 
     if (editingIndex !== null && editingKey === key) {
         const updatedList = [...currentList];
         const oldValue = updatedList[editingIndex];
-        const newValue = value.trim();
         updatedList[editingIndex] = newValue;
 
-        let nextMaster = { ...masterData, [key]: updatedList };
+        let nextMaster: any = { ...masterData, [key]: updatedList };
 
         if (key === 'classes') {
             const newClassSections = { ...masterData.classSections };
@@ -173,9 +183,9 @@ const Settings: React.FC<SettingsProps> = ({
         }
 
         onUpdateMasterData(nextMaster);
+        alert(`✅ Updated successfully.`);
         cancelEditing();
     } else {
-        const newValue = value.trim();
         let nextMaster: any = { ...masterData };
         nextMaster[key] = [...currentList, newValue];
 
@@ -192,6 +202,7 @@ const Settings: React.FC<SettingsProps> = ({
 
         onUpdateMasterData(nextMaster);
         setNewInputs(prev => ({ ...prev, [key]: '' }));
+        alert(`✅ "${newValue}" added to ${key}.`);
     }
   };
 
@@ -201,7 +212,7 @@ const Settings: React.FC<SettingsProps> = ({
     const nextChar = String.fromCharCode(lastChar.charCodeAt(0) + 1);
     
     if (nextChar > 'Z') {
-        alert('Maximum alphabetical sections reached (Z).');
+        alert('⚠️ Maximum alphabetical sections reached (Z).');
         return;
     }
 
@@ -209,39 +220,56 @@ const Settings: React.FC<SettingsProps> = ({
         ...masterData,
         sections: [...currentSections, nextChar].sort()
     });
+    alert(`✅ Section "${nextChar}" added.`);
   };
 
   const removeItemByValue = (key: keyof MasterData, value: string) => {
-    const currentList = [...(masterData[key] as string[])];
-    
+    const currentList = masterData[key];
+    if (!Array.isArray(currentList)) return;
+
     // Strict deletion for sections to prevent sequence gaps
     if (key === 'sections') {
-       const sorted = [...currentList].sort();
+       const sorted = [...(currentList as string[])].sort();
        const highest = sorted[sorted.length - 1];
        if (value !== highest) {
-          alert(`To maintain strict sequence, you must delete the alphabetically last section ("${highest}") first.`);
+          alert(`⚠️ Sequence Lock: To maintain strict section order, you must delete the last section ("${highest}") first.`);
           return;
        }
     }
 
-    if (!window.confirm(`Are you sure you want to delete "${value}"? This will remove all related mappings.`)) return;
+    const warningMsg = key === 'classes' 
+      ? `🚨 CRITICAL WARNING: Deleting Class "${value}" will also PERMANENTLY remove its Subject Mappings and Section Assignments.\n\nAre you absolutely sure?`
+      : `⚠️ Delete "${value}" from system? This action cannot be undone.`;
+
+    if (!window.confirm(warningMsg)) return;
     
-    const updatedList = currentList.filter(item => item !== value);
-    const nextMaster = { ...masterData, [key]: updatedList };
+    // Perform deletion with filtering based on exact match (trimmed)
+    const normalizedValue = value.trim();
+    const updatedList = (currentList as string[]).filter(item => item.trim() !== normalizedValue);
     
+    // Explicitly construct the updated MasterData object
+    const updatedMasterData: any = { ...masterData };
+    updatedMasterData[key] = updatedList;
+    
+    // Handle dependent data cleanup for classes
     if (key === 'classes') {
       const newClassSections = { ...masterData.classSections };
-      delete newClassSections[value];
-      nextMaster.classSections = newClassSections;
+      delete newClassSections[normalizedValue];
+      updatedMasterData.classSections = newClassSections;
       
       const newClassSubjects = { ...masterData.classSubjects };
-      delete newClassSubjects[value];
-      nextMaster.classSubjects = newClassSubjects;
+      delete newClassSubjects[normalizedValue];
+      updatedMasterData.classSubjects = newClassSubjects;
     }
     
-    onUpdateMasterData(nextMaster);
-    if (editingKey === key && newInputs[editingKey] === value) {
-      cancelEditing();
+    // Update State
+    onUpdateMasterData(updatedMasterData as MasterData);
+    alert(`🗑️ "${value}" has been removed from ${key}.`);
+
+    // If the item being deleted was being edited, cancel the edit mode
+    if (editingKey === key && editingIndex !== null) {
+       const editingItem = (currentList as string[])[editingIndex];
+       if (editingItem === value) cancelEditing();
     }
   };
 
@@ -286,10 +314,12 @@ const Settings: React.FC<SettingsProps> = ({
         name: subName,
         type: selectedSubjectType
       }));
+    
     if (newSubjects.length === 0) {
-      alert('Selected subjects are already assigned to the class.');
+      alert('⚠️ Selection error: Selected subjects are already assigned to this class.');
       return;
     }
+
     onUpdateMasterData({
       ...masterData,
       classSubjects: {
@@ -297,6 +327,7 @@ const Settings: React.FC<SettingsProps> = ({
         [selectedClassForSubject]: [...currentSubjects, ...newSubjects]
       }
     });
+    alert(`✅ ${newSubjects.length} subjects added to Class ${selectedClassForSubject}.`);
     setSelectedSubjectsToAdd([]);
     setSubjectPoolSearch('');
   };
@@ -308,28 +339,28 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const handleRemoveSubjectFromClass = (className: string, subjectName: string) => {
-    const currentSubjects = masterData.classSubjects[className] || [];
-    const updatedSubjects = currentSubjects.filter(s => s.name !== subjectName);
-    onUpdateMasterData({
-      ...masterData,
-      classSubjects: {
-        ...masterData.classSubjects,
-        [className]: updatedSubjects
-      }
-    });
+    if (window.confirm(`⚠️ Remove "${subjectName}" from Class ${className} curriculum?`)) {
+      const currentSubjects = masterData.classSubjects[className] || [];
+      const updatedSubjects = currentSubjects.filter(s => s.name !== subjectName);
+      onUpdateMasterData({
+        ...masterData,
+        classSubjects: {
+          ...masterData.classSubjects,
+          [className]: updatedSubjects
+        }
+      });
+      alert(`🗑️ "${subjectName}" removed from Class ${className}.`);
+    }
   };
 
-  // Enforce sequential section assignment logic
   const getSequentialSections = (clickedSection: string, currentSelection: string[]) => {
     const allSections = [...masterData.sections].sort();
     const clickedIndex = allSections.indexOf(clickedSection);
     const isSelected = currentSelection.includes(clickedSection);
 
     if (isSelected) {
-      // Deselect clicked and all following (prevents gaps)
       return allSections.slice(0, clickedIndex);
     } else {
-      // Select clicked and all preceding (prevents gaps)
       return allSections.slice(0, clickedIndex + 1);
     }
   };
@@ -402,7 +433,6 @@ const Settings: React.FC<SettingsProps> = ({
     const currentVal = newInputs[key as keyof typeof newInputs];
     const isEditingThisKey = editingKey === key;
 
-    // Sorting the display list specifically for sections to ensure sequence visibility
     const displayList = isSectionList ? [...list].sort() : list;
 
     return (
@@ -441,6 +471,7 @@ const Settings: React.FC<SettingsProps> = ({
                 <button 
                   onClick={() => addItemToMaster(key)}
                   className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700 transition shadow-sm"
+                  title={`Add ${title.slice(0, -1)}`}
                 >
                   <Plus size={18} />
                 </button>
@@ -450,6 +481,7 @@ const Settings: React.FC<SettingsProps> = ({
              <button 
                 onClick={handleAddNextSection}
                 className="w-full bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 transition shadow-sm font-bold flex items-center justify-center gap-2 text-sm"
+                title="Auto-increment Section"
              >
                 <Plus size={18} /> Add Next Section ({String.fromCharCode((list.length > 0 ? [...list].sort()[list.length - 1].toUpperCase().charCodeAt(0) : 64) + 1)})
              </button>
@@ -484,7 +516,7 @@ const Settings: React.FC<SettingsProps> = ({
                           <button
                             key={s}
                             onClick={() => handleSequentialSectionToggle(s)}
-                            className={`w-7 h-7 rounded flex items-center justify-center text-[10px] font-bold transition-all border ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-400'}`}
+                            className={`w-7 h-7 rounded flex items-center justify-center text-[10px] font-bold transition-all border ${isSelected ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-400'}`}
                             title={`Sequential Assign Section ${s}`}
                           >
                             {s}
@@ -507,7 +539,10 @@ const Settings: React.FC<SettingsProps> = ({
                 const isItemEditing = isEditingThisKey && editingIndex === originalIndex;
                 
                 return (
-                    <div key={idx} className={`flex justify-between items-center text-sm p-2.5 rounded group transition-all min-h-[44px] ${isItemEditing ? 'bg-orange-50 border border-orange-200 ring-1 ring-orange-100' : 'bg-slate-50 hover:bg-blue-50 border border-transparent'}`}>
+                    <div 
+                      key={`${key}-${item}-${idx}`} 
+                      className={`flex justify-between items-center text-sm p-2.5 rounded group transition-all min-h-[44px] ${isItemEditing ? 'bg-orange-50 border border-orange-200 ring-1 ring-orange-100' : 'bg-slate-50 hover:bg-blue-50 border border-transparent'}`}
+                    >
                       <div className="flex flex-col flex-1 min-w-0 mr-2">
                         <span className="text-slate-700 font-bold truncate uppercase tracking-tight">{item}</span>
                         {isClassList && (masterData.classSections[item] || []).length > 0 && (
@@ -516,19 +551,19 @@ const Settings: React.FC<SettingsProps> = ({
                            </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0 z-10">
                         {!isSectionList && (
                           <button 
-                            onClick={() => startEditing(key, originalIndex)}
-                            className="text-slate-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-100 transition"
+                            onClick={(e) => { e.stopPropagation(); startEditing(key, originalIndex); }}
+                            className="text-slate-400 hover:text-blue-600 p-2 rounded hover:bg-blue-100 transition"
                             title="Edit"
                           >
                             <Edit2 size={14} />
                           </button>
                         )}
                         <button 
-                          onClick={() => removeItemByValue(key, item)}
-                          className={`text-slate-300 hover:text-red-500 p-1.5 rounded hover:bg-red-50 transition ${isSectionList && idx !== displayList.length - 1 ? 'hidden' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); removeItemByValue(key, item); }}
+                          className={`text-slate-400 hover:text-red-600 p-2 rounded hover:bg-red-50 transition ${isSectionList && idx !== displayList.length - 1 ? 'hidden' : ''}`}
                           title={isSectionList ? "Delete (Only last section allowed)" : "Delete"}
                         >
                           <Trash2 size={14} />
@@ -819,7 +854,7 @@ const Settings: React.FC<SettingsProps> = ({
               placeholder="e.g. 2027-2028" 
               className="flex-1 border rounded p-2 focus:ring-2 focus:ring-blue-100 outline-none"
             />
-            <button onClick={handleAddSession} className="bg-green-600 text-white px-4 rounded hover:bg-green-700 transition shadow-sm">
+            <button onClick={handleAddSession} className="bg-green-600 text-white px-4 rounded hover:bg-green-700 transition shadow-sm" title="Add Session">
               <Plus size={20} />
             </button>
           </div>
@@ -835,7 +870,7 @@ const Settings: React.FC<SettingsProps> = ({
                   {!session.isCurrent && (
                      <button onClick={() => handleSetCurrentSession(session.id)} className="text-xs text-blue-600 font-bold hover:underline">Mark Current</button>
                   )}
-                  <button onClick={() => handleDeleteSession(session.id)} className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition">
+                  <button onClick={() => handleDeleteSession(session.id)} className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition" title="Delete Session">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -947,7 +982,7 @@ const Settings: React.FC<SettingsProps> = ({
                             <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">{sub.type}</span>
                           </div>
                         </div>
-                        <button onClick={() => handleRemoveSubjectFromClass(selectedClassForSubject, sub.name)} className="text-slate-300 hover:text-red-600 p-2 rounded-full transition-all opacity-0 group-hover:opacity-100">
+                        <button onClick={() => handleRemoveSubjectFromClass(selectedClassForSubject, sub.name)} className="text-slate-400 hover:text-red-600 p-2 rounded-full transition-all" title="Remove Subject">
                           <Trash2 size={18} />
                         </button>
                      </div>

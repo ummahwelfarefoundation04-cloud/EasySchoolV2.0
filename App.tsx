@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DEFAULT_SESSIONS, DEFAULT_SETTINGS, INITIAL_MASTER_DATA, INITIAL_SCHOOL_PROFILE, INITIAL_STUDENT_FORM, DEMO_STUDENTS } from './constants';
 import { Student, Session, Settings as SettingsType, MasterData, SchoolProfile } from './types';
@@ -52,11 +53,13 @@ const App: React.FC = () => {
       // Update existing
       setStudents(prev => prev.map(s => s.id === student.id ? student : s));
       setEditingStudent(null);
+      alert(`✅ Success: Record for ${student.firstName} ${student.lastName} has been updated.`);
     } else {
       // Create new
       setStudents([...students, student]);
       // Increment the ID counter for next time
       setSettings(prev => ({ ...prev, idStartNumber: prev.idStartNumber + 1 }));
+      alert(`✅ Success: New admission for ${student.firstName} ${student.lastName} saved successfully.`);
     }
     setActiveTab('students');
   };
@@ -67,8 +70,11 @@ const App: React.FC = () => {
   };
 
   const handleDeleteStudent = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this student record?')) {
+    const student = students.find(s => s.id === id);
+    const name = student ? `${student.firstName} ${student.lastName}` : id;
+    if (window.confirm(`⚠️ WARNING: Are you absolutely sure you want to PERMANENTLY DELETE the student record for "${name}"?\n\nThis action cannot be undone and all academic history for this student will be lost.`)) {
       setStudents(prev => prev.filter(s => s.id !== id));
+      alert(`🗑️ Student record for "${name}" has been deleted.`);
     }
   };
 
@@ -78,9 +84,12 @@ const App: React.FC = () => {
   };
 
   const handleFactoryReset = () => {
-    if (window.confirm("WARNING: This will delete ALL stored data (Students, Exams, Settings) and reset the app to default demo data. This cannot be undone.\n\nAre you sure?")) {
-      localStorage.clear();
-      window.location.reload();
+    if (window.confirm("🚨 CRITICAL WARNING: This will delete ALL stored data (Students, Exams, Settings) and reset the app to factory defaults. This cannot be undone.\n\nType 'RESET' in the next prompt if you are sure.")) {
+      const confirmation = window.prompt("Type 'RESET' to confirm factory reset:");
+      if (confirmation === 'RESET') {
+        localStorage.clear();
+        window.location.reload();
+      }
     }
   };
 
@@ -124,7 +133,7 @@ const App: React.FC = () => {
 
     setStudents(prev => [...prev, ...newStudents]);
     setSettings(prev => ({ ...prev, idStartNumber: nextIdNumber }));
-    alert(`Successfully imported ${newStudents.length} students.`);
+    alert(`🎉 Successfully imported ${newStudents.length} students into the system.`);
   };
 
   const renderContent = () => {
