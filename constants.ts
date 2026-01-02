@@ -112,9 +112,9 @@ export const MONTHS = [
 export const DATE_FORMATS = ['dd-mm-yyyy', 'mm-dd-yyyy', 'yyyy-mm-dd'];
 
 export const DEFAULT_SESSIONS = [
-  { id: '1', name: '2024-2025', isCurrent: false },
-  { id: '2', name: '2025-2026', isCurrent: true },
-  { id: '3', name: '2026-2027', isCurrent: false },
+  { id: '1', name: '2025-2026', isCurrent: true },
+  { id: '2', name: '2026-2027', isCurrent: false },
+  { id: '3', name: '2027-2028', isCurrent: false },
 ];
 
 export const INITIAL_STUDENT_FORM = {
@@ -161,7 +161,7 @@ export const DEMO_STUDENTS = [
     id: 'ES-101',
     admissionNumber: 'ES-101',
     admissionDate: '2025-04-01',
-    admissionSessionId: '2',
+    admissionSessionId: '1',
     rollNo: '01',
     class: '10',
     section: 'A',
@@ -210,105 +210,5 @@ export const DEMO_STUDENTS = [
         }
       }
     }
-  },
-  {
-    id: 'ES-102',
-    admissionNumber: 'ES-102',
-    admissionDate: '2025-04-02',
-    admissionSessionId: '2',
-    rollNo: '02',
-    class: '10',
-    section: 'A',
-    category: 'OBC',
-    house: 'Blue House',
-    subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computer Science'],
-    firstName: 'Isha',
-    middleName: '',
-    lastName: 'Sharma',
-    gender: 'Female',
-    dob: '2009-11-20',
-    religion: 'Hinduism',
-    caste: 'Brahmin',
-    bloodGroup: 'B+',
-    mobile: '9876543212',
-    whatsapp: '',
-    email: 'isha.s@example.com',
-    currentAddress: '15, Green Park, North Zone',
-    permanentAddress: 'Village Ratpur, Dist. XYZ',
-    nationalId: '',
-    localId: '',
-    rte: 'No',
-    father: {
-      name: 'Suresh Sharma',
-      phone: '9876543212',
-      occupation: 'Service',
-      photoUrl: ''
-    },
-    mother: {
-      name: 'Meena Sharma',
-      phone: '9876543213',
-      occupation: 'Homemaker',
-      photoUrl: ''
-    },
-    guardianType: 'Father',
-    otherGuardian: { name: '', phone: '', occupation: '', photoUrl: '', relation: '' },
-    parentLoginId: '9876543212',
-    parentLoginPassword: 'securepass',
-    documents: [],
-    marks: {
-        'Term 1': {
-            'Unit Test 1': {
-              'Mathematics': '15',
-              'Science': '20',
-              'English': '18'
-            }
-        }
-    }
-  },
-  {
-    id: 'ES-103',
-    admissionNumber: 'ES-103',
-    admissionDate: '2025-04-05',
-    admissionSessionId: '2',
-    rollNo: '01',
-    class: '5',
-    section: 'B',
-    category: 'General',
-    house: 'Green House',
-    subjects: ['Mathematics', 'English', 'Hindi', 'Environmental Studies'],
-    firstName: 'Rohan',
-    middleName: '',
-    lastName: 'Verma',
-    gender: 'Male',
-    dob: '2014-03-10',
-    religion: 'Hinduism',
-    caste: '',
-    bloodGroup: 'A+',
-    mobile: '9876543214',
-    whatsapp: '',
-    email: '',
-    currentAddress: 'Flat 303, Sky Towers',
-    permanentAddress: 'Flat 303, Sky Towers',
-    nationalId: '',
-    localId: '',
-    rte: 'No',
-    father: {
-      name: 'Amit Verma',
-      phone: '9876543214',
-      occupation: 'Architect',
-      photoUrl: ''
-    },
-    mother: {
-      name: 'Sunita Verma',
-      phone: '9876543215',
-      occupation: 'Artist',
-      photoUrl: ''
-    },
-    guardianType: 'Mother',
-    otherGuardian: { name: '', phone: '', occupation: '', photoUrl: '', relation: '' },
-    parentLoginId: '9876543214',
-    parentLoginPassword: 'rohanpass',
-    documents: [],
-    marks: {}
   }
 ];

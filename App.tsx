@@ -7,7 +7,7 @@ import Settings from './components/Settings';
 import StudentList from './components/StudentList';
 import ExamModule from './components/ExamModule';
 import LiveAssistant from './components/LiveAssistant';
-import { LayoutDashboard, UserPlus, Users, Settings as SettingsIcon, GraduationCap, Calendar, ArrowRight, ClipboardList, Mic } from 'lucide-react';
+import { LayoutDashboard, UserPlus, Users, Settings as SettingsIcon, GraduationCap, Calendar, ArrowRight, ClipboardList, Mic, ChevronDown, ChevronRight, UserCheck } from 'lucide-react';
 
 // Keys for LocalStorage
 const STORAGE_KEYS = {
@@ -30,7 +30,8 @@ const loadState = (key: string, fallback: any) => {
 };
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'admission' | 'students' | 'exams' | 'settings' | 'live'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'student-admission' | 'search-student' | 'exams' | 'settings' | 'live'>('dashboard');
+  const [isStudentMenuOpen, setIsStudentMenuOpen] = useState(false);
   
   // App State with Persistence
   const [sessions, setSessions] = useState<Session[]>(() => loadState(STORAGE_KEYS.SESSIONS, DEFAULT_SESSIONS));
@@ -49,6 +50,13 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.MASTER_DATA, JSON.stringify(masterData)); }, [masterData]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students)); }, [students]);
 
+  // Keep student menu open if we are on a student related tab
+  useEffect(() => {
+    if (activeTab === 'search-student' || activeTab === 'student-admission') {
+      setIsStudentMenuOpen(true);
+    }
+  }, [activeTab]);
+
   const handleSaveStudent = (student: Student) => {
     if (editingStudent) {
       setStudents(prev => prev.map(s => s.id === student.id ? student : s));
@@ -59,12 +67,12 @@ const App: React.FC = () => {
       setSettings(prev => ({ ...prev, idStartNumber: prev.idStartNumber + 1 }));
       alert(`✅ Success: New admission for ${student.firstName} ${student.lastName} saved successfully.`);
     }
-    setActiveTab('students');
+    setActiveTab('search-student');
   };
 
   const handleEditStudent = (student: Student) => {
     setEditingStudent(student);
-    setActiveTab('admission');
+    setActiveTab('student-admission');
   };
 
   const handleDeleteStudent = (id: string) => {
@@ -78,7 +86,7 @@ const App: React.FC = () => {
 
   const handleCancelAdmission = () => {
     setEditingStudent(null);
-    setActiveTab('dashboard');
+    setActiveTab('search-student');
   };
 
   const handleFactoryReset = () => {
@@ -121,7 +129,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'admission':
+      case 'student-admission':
         return <AdmissionForm settings={settings} sessions={sessions} masterData={masterData} initialData={editingStudent || undefined} onSave={handleSaveStudent} onCancel={handleCancelAdmission} />;
       case 'exams':
         return <ExamModule students={students} masterData={masterData} schoolProfile={schoolProfile} onUpdateStudents={setStudents} onUpdateMasterData={setMasterData} />;
@@ -129,8 +137,8 @@ const App: React.FC = () => {
         return <LiveAssistant schoolProfile={schoolProfile} />;
       case 'settings':
         return <Settings settings={settings} schoolProfile={schoolProfile} sessions={sessions} masterData={masterData} onUpdateSettings={setSettings} onUpdateSchoolProfile={setSchoolProfile} onUpdateSessions={setSessions} onUpdateMasterData={setMasterData} onImportStudents={handleImportStudents} onFactoryReset={handleFactoryReset} />;
-      case 'students':
-        return <StudentList students={students} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />;
+      case 'search-student':
+        return <StudentList students={students} masterData={masterData} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />;
       case 'dashboard':
       default:
         const currentSession = sessions.find(s => s.isCurrent);
@@ -192,7 +200,7 @@ const App: React.FC = () => {
                  </div>
                </div>
 
-               <div onClick={() => { setEditingStudent(null); setActiveTab('live'); }} className="bg-slate-800 rounded-2xl shadow-md p-6 border border-slate-700 relative overflow-hidden group cursor-pointer hover:bg-slate-750 transition-all hover:shadow-lg hover:-translate-y-1">
+               <div onClick={() => { setActiveTab('live'); }} className="bg-slate-800 rounded-2xl shadow-md p-6 border border-slate-700 relative overflow-hidden group cursor-pointer hover:bg-slate-750 transition-all hover:shadow-lg hover:-translate-y-1">
                  <div className="flex flex-col h-full justify-between relative z-10">
                    <div className="flex justify-between items-start">
                      <div className="p-2.5 bg-blue-600 rounded-xl group-hover:bg-blue-500 transition"><Mic size={24} className="text-white" /></div>
@@ -210,6 +218,8 @@ const App: React.FC = () => {
     }
   };
 
+  const isStudentTab = activeTab === 'search-student' || activeTab === 'student-admission';
+
   return (
     <div className="flex min-h-screen bg-slate-100">
       <aside className="w-64 bg-slate-900 text-white flex flex-col fixed h-full z-20 overflow-y-auto shadow-2xl">
@@ -221,12 +231,75 @@ const App: React.FC = () => {
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
-          <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><LayoutDashboard size={20} /> Dashboard</button>
-          <button onClick={() => { setEditingStudent(null); setActiveTab('admission'); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'admission' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><UserPlus size={20} /> Admission</button>
-          <button onClick={() => setActiveTab('students')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'students' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><Users size={20} /> Students</button>
-          <button onClick={() => setActiveTab('exams')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'exams' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><ClipboardList size={20} /> Exams</button>
-          <button onClick={() => setActiveTab('live')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'live' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><Mic size={20} /> AI Live</button>
-          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><SettingsIcon size={20} /> Settings</button>
+          {/* Dashboard */}
+          <button 
+            onClick={() => setActiveTab('dashboard')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+          >
+            <LayoutDashboard size={20} /> Dashboard
+          </button>
+
+          {/* Students Nested Menu */}
+          <div className="space-y-1">
+            <button 
+              onClick={() => {
+                setIsStudentMenuOpen(!isStudentMenuOpen);
+                if (!isStudentMenuOpen && activeTab !== 'student-admission') {
+                  setActiveTab('search-student');
+                }
+              }}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isStudentTab ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <div className="flex items-center gap-3">
+                <Users size={20} /> Students
+              </div>
+              {isStudentMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+            
+            {isStudentMenuOpen && (
+              <div className="pl-6 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                <button 
+                  onClick={() => setActiveTab('search-student')}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 ${activeTab === 'search-student' ? 'text-blue-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <UserCheck size={16} /> Search Student
+                </button>
+                <button 
+                  onClick={() => {
+                    setEditingStudent(null);
+                    setActiveTab('student-admission');
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 ${activeTab === 'student-admission' ? 'text-blue-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <UserPlus size={16} /> New Admission
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Exams */}
+          <button 
+            onClick={() => setActiveTab('exams')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'exams' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+          >
+            <ClipboardList size={20} /> Exams
+          </button>
+
+          {/* Live AI */}
+          <button 
+            onClick={() => setActiveTab('live')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'live' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+          >
+            <Mic size={20} /> AI Live
+          </button>
+
+          {/* Settings */}
+          <button 
+            onClick={() => setActiveTab('settings')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+          >
+            <SettingsIcon size={20} /> Settings
+          </button>
         </nav>
 
         <div className="p-4 bg-slate-800/50 m-4 rounded-lg border border-slate-700">
@@ -237,7 +310,9 @@ const App: React.FC = () => {
 
       <main className="flex-1 ml-64 p-8">
         <header className="flex justify-between items-center mb-8 print:hidden">
-          <h2 className="text-2xl font-bold text-slate-800 capitalize tracking-tight">{activeTab}</h2>
+          <h2 className="text-2xl font-bold text-slate-800 capitalize tracking-tight">
+            {activeTab.replace('-', ' ')}
+          </h2>
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border-2 border-white shadow-sm overflow-hidden">
             {schoolProfile.logoUrl ? <img src={schoolProfile.logoUrl} alt="Logo" className="w-full h-full object-cover" /> : "A"}
           </div>
