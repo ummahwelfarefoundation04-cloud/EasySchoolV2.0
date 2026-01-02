@@ -1,15 +1,15 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Gemini API client with the API key from environment variables.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const generateStudentSummary = async (studentData: any): Promise<string> => {
   // Check if API key is provided
   if (!process.env.API_KEY) {
     console.warn("Gemini API Key is missing.");
     return "AI service unavailable: No API Key provided.";
   }
+
+  // Always create a new GoogleGenAI instance right before the API call to ensure it uses the current API key.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const prompt = `
@@ -31,7 +31,7 @@ export const generateStudentSummary = async (studentData: any): Promise<string> 
       contents: prompt,
     });
 
-    // Directly access the text property of the response.
+    // Directly access the text property of the response as per extracting text guidelines.
     return response.text || "Could not generate summary.";
   } catch (error) {
     console.error("Error generating student summary:", error);

@@ -5,103 +5,46 @@ export const CO_SCHOLASTIC_AREAS = ['General', 'Affective Traits', 'Psychomotor 
 
 export const GRADE_ORDER = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
-export const CLASS_SHORT_NAMES: Record<string, string> = {
-  'Nursery': 'NUR',
-  'LKG': 'LKG',
-  'UKG': 'UKG',
-  '1': 'C1',
-  '2': 'C2',
-  '3': 'C3',
-  '4': 'C4',
-  '5': 'C5',
-  '6': 'C6',
-  '7': 'C7',
-  '8': 'C8',
-  '9': 'C9',
-  '10': 'C10',
-  '11': 'C11',
-  '12': 'C12'
-};
-
 export const INITIAL_MASTER_DATA = {
   classes: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
-  sections: ['A', 'B', 'C', 'D'],
-  categories: ['General', 'OBC', 'SC', 'ST', 'EWS'],
-  houses: ['Red House', 'Blue House', 'Green House', 'Yellow House'],
-  religions: ['Christianity', 'Islam', 'Hinduism', 'Buddhism', 'Judaism', 'Sikhism', 'Other'],
-  subjects: ['Mathematics', 'Science', 'English', 'Hindi', 'Social Studies', 'Computer Science', 'Art', 'Music', 'Physics', 'Chemistry', 'Biology', 'Physical Education', 'Environmental Studies'],
+  sections: ['A', 'B', 'C'],
+  categories: ['General', 'OBC', 'SC', 'ST'],
+  houses: ['Red', 'Blue', 'Green', 'Yellow'],
+  religions: ['Hinduism', 'Islam', 'Christianity', 'Sikhism', 'Buddhism', 'Other'],
+  subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computer Science'],
   examTerms: ['Term 1', 'Term 2'],
-  termExams: {
-    'Term 1': [
-      { name: 'Unit Test 1', maxMarks: 20, subjects: ['Mathematics', 'Science', 'English'] },
-      { name: 'Subject Enrichment', maxMarks: 5, subjects: ['Mathematics', 'Science'] },
-      { name: 'Half Yearly Exam', maxMarks: 80, subjects: ['Mathematics', 'Science', 'English', 'Hindi', 'Social Studies'] }
-    ],
-    'Term 2': [
-      { name: 'Unit Test 2', maxMarks: 20, subjects: ['Mathematics', 'Science', 'English'] },
-      { name: 'Annual Exam', maxMarks: 80, subjects: ['Mathematics', 'Science', 'English', 'Hindi', 'Social Studies'] }
-    ]
-  } as Record<string, any[]>,
-  termCoScholasticAreas: {
-    'Term 1': ['General', 'Affective Traits'],
-    'Term 2': ['General', 'Affective Traits', 'Psychomotor Skills']
-  } as Record<string, string[]>,
-  classSubjects: {
-    '10': [
-      { name: 'Mathematics', type: 'Mandatory' },
-      { name: 'English', type: 'Mandatory' },
-      { name: 'Science', type: 'Mandatory' },
-      { name: 'Social Studies', type: 'Mandatory' },
-      { name: 'Hindi', type: 'Optional' },
-      { name: 'Computer Science', type: 'Optional' }
-    ],
-    '5': [
-       { name: 'Mathematics', type: 'Mandatory' },
-       { name: 'English', type: 'Mandatory' },
-       { name: 'Hindi', type: 'Mandatory' },
-       { name: 'Environmental Studies', type: 'Mandatory' },
-       { name: 'Computer Science', type: 'Optional' },
-       { name: 'Art', type: 'Optional' }
-    ]
-  } as Record<string, any[]>,
-  classSections: {
-    '5': ['A', 'B', 'C', 'D'],
-    '3': ['A', 'B']
-  } as Record<string, string[]>,
-  coScholasticSubjects: {
-    'General': ['Work Education', 'Art Education', 'Health & Physical Education'],
-    'Affective Traits': ['Discipline', 'Cleanliness', 'Respect', 'Punctuality'],
-    'Psychomotor Skills': ['Yoga', 'Sports', 'Gardening', 'NCC']
-  } as Record<string, string[]>,
-  classCoScholasticAreas: {
-    '10': ['General', 'Affective Traits'],
-    '5': ['General', 'Psychomotor Skills']
-  } as Record<string, string[]>,
+  termExams: {} as Record<string, any[]>,
+  termCoScholasticAreas: {} as Record<string, string[]>,
+  classSubjects: {} as Record<string, any[]>,
+  classSections: {} as Record<string, string[]>,
+  coScholasticSubjects: {} as Record<string, string[]>,
+  classCoScholasticAreas: {} as Record<string, string[]>,
   examSchedules: [] as any[]
 };
 
 export const DEFAULT_SETTINGS = {
-  idType: 'Numeric' as const,
+  idType: 'Pattern' as const,
   idPrefix: 'ES',
-  idSeparator: '-',
-  idStartNumber: 104,
-  idPadding: 3,
+  idSeparator: '/',
+  idStartNumber: 1001,
+  idPadding: 4,
+  idPattern: '[PREFIX]/[YEAR]/[SERIAL]',
   includeClassInId: false,
   includeDateInId: false
 };
 
 export const INITIAL_SCHOOL_PROFILE = {
   name: 'Easy School',
-  code: 'ES001',
-  address: '123 Education Lane, Knowledge City',
+  code: 'ES-2025',
+  address: '123 Education Lane, Learning City',
   email: 'admin@easyschool.com',
-  phone1: '',
+  phone1: '+1 234 567 890',
   phone2: '',
   sessionStartMonth: 'April',
   dateFormat: 'dd-mm-yyyy',
   currency: 'INR',
   logoUrl: '',
-  boardLogoUrl: ''
+  boardLogoUrl: '' 
 };
 
 export const MONTHS = [
@@ -109,12 +52,9 @@ export const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-export const DATE_FORMATS = ['dd-mm-yyyy', 'mm-dd-yyyy', 'yyyy-mm-dd'];
-
 export const DEFAULT_SESSIONS = [
   { id: '1', name: '2025-2026', isCurrent: true },
-  { id: '2', name: '2026-2027', isCurrent: false },
-  { id: '3', name: '2027-2028', isCurrent: false },
+  { id: '2', name: '2026-2027', isCurrent: false }
 ];
 
 export const INITIAL_STUDENT_FORM = {
@@ -123,7 +63,7 @@ export const INITIAL_STUDENT_FORM = {
   rollNo: '',
   class: '',
   section: '',
-  category: '',
+  category: 'General',
   house: '',
   subjects: [],
   firstName: '',
@@ -131,84 +71,69 @@ export const INITIAL_STUDENT_FORM = {
   lastName: '',
   gender: 'Male',
   dob: '',
-  religion: '',
-  caste: '',
-  bloodGroup: '',
+  religion: 'Hinduism',
+  bloodGroup: 'O+',
   mobile: '',
-  whatsapp: '',
   email: '',
   currentAddress: '',
   permanentAddress: '',
   nationalId: '',
-  localId: '',
   rte: 'No',
-  father: { name: '', phone: '', occupation: '', photoUrl: '' },
-  mother: { name: '', phone: '', occupation: '', photoUrl: '' },
+  father: { name: '', phone: '', occupation: '' },
+  mother: { name: '', phone: '', occupation: '' },
   guardianType: 'Father',
-  otherGuardian: { name: '', phone: '', occupation: '', photoUrl: '', relation: '' },
-  parentLoginId: '',
-  parentLoginPassword: '',
-  documents: [
-    { title: 'Transfer Certificate' },
-    { title: 'Birth Certificate' },
-    { title: 'Aadhar Card' },
-    { title: 'Photo' },
-  ],
+  documents: [],
 };
 
 export const DEMO_STUDENTS = [
   {
-    id: 'ES-101',
-    admissionNumber: 'ES-101',
-    admissionDate: '2025-04-01',
+    id: 'ES/2025/1001',
+    admissionNumber: 'ES/2025/1001',
+    admissionDate: '2025-04-10',
     admissionSessionId: '1',
     rollNo: '01',
     class: '10',
     section: 'A',
     category: 'General',
-    house: 'Red House',
-    subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Hindi'],
-    firstName: 'Aarav',
-    middleName: '',
-    lastName: 'Patel',
+    firstName: 'Arjun',
+    lastName: 'Sharma',
     gender: 'Male',
-    dob: '2009-08-15',
+    dob: '2010-05-15',
     religion: 'Hinduism',
-    caste: '',
-    bloodGroup: 'O+',
+    bloodGroup: 'B+',
     mobile: '9876543210',
-    whatsapp: '9876543210',
-    email: 'aarav.p@example.com',
-    currentAddress: '42, Sunset Boulevard, West Zone',
-    permanentAddress: '42, Sunset Boulevard, West Zone',
-    nationalId: '1234-5678-9012',
-    localId: '',
+    currentAddress: 'New Delhi, India',
+    permanentAddress: 'New Delhi, India',
     rte: 'No',
-    father: {
-      name: 'Vikram Patel',
-      phone: '9876543210',
-      occupation: 'Business',
-      photoUrl: ''
-    },
-    mother: {
-      name: 'Anjali Patel',
-      phone: '9876543211',
-      occupation: 'Teacher',
-      photoUrl: ''
-    },
+    father: { name: 'Rajesh Sharma', phone: '9876543211', occupation: 'Engineer' },
+    mother: { name: 'Suman Sharma', phone: '9876543212', occupation: 'Teacher' },
     guardianType: 'Father',
-    otherGuardian: { name: '', phone: '', occupation: '', photoUrl: '', relation: '' },
     parentLoginId: '9876543210',
-    parentLoginPassword: 'password123',
-    documents: [],
-    marks: {
-      'Term 1': {
-        'Unit Test 1': {
-          'Mathematics': '18',
-          'Science': '19',
-          'English': '17'
-        }
-      }
-    }
+    documents: []
+  },
+  {
+    id: 'ES/2025/1002',
+    admissionNumber: 'ES/2025/1002',
+    admissionDate: '2025-04-12',
+    admissionSessionId: '1',
+    rollNo: '02',
+    class: '9',
+    section: 'B',
+    category: 'OBC',
+    firstName: 'Priya',
+    lastName: 'Patel',
+    gender: 'Female',
+    dob: '2011-08-22',
+    religion: 'Hinduism',
+    bloodGroup: 'A+',
+    mobile: '9123456789',
+    currentAddress: 'Ahmedabad, India',
+    permanentAddress: 'Ahmedabad, India',
+    rte: 'Yes',
+    father: { name: 'Vikram Patel', phone: '9123456780', occupation: 'Business' },
+    mother: { name: 'Meena Patel', phone: '9123456781', occupation: 'Homemaker' },
+    guardianType: 'Father',
+    parentLoginId: '9123456789',
+    documents: []
   }
 ];

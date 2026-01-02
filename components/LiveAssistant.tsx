@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
-import { Mic, MicOff, Volume2, Radio, X, Loader2, PlayCircle, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, Radio, X, Loader2, PlayCircle, MessageSquare, Sparkles } from 'lucide-react';
 import { SchoolProfile } from '../types';
 
 interface LiveAssistantProps {
@@ -21,7 +21,13 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({ schoolProfile }) => {
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
 
-  // Manual encode/decode implementation as required
+  const SUGGESTIONS = [
+    "How do I add a new student?",
+    "Show me how to manage academic sessions.",
+    "Help me configure student ID rules.",
+    "Explain the exam term settings."
+  ];
+
   function encode(bytes: Uint8Array) {
     let binary = '';
     const len = bytes.byteLength;
@@ -191,100 +197,105 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({ schoolProfile }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col md:flex-row h-[500px]">
+      <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col md:flex-row h-[550px]">
         
         {/* Left Side: Interaction Zone */}
         <div className="flex-1 bg-slate-900 p-8 flex flex-col items-center justify-center relative">
-          <div className="absolute top-6 left-6 flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                {status === 'active' ? 'Live Connection Active' : status === 'connecting' ? 'Establishing Secure Link' : 'System Ready'}
+          <div className="absolute top-8 left-8 flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`}></div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                {status === 'active' ? 'Live Link Active' : status === 'connecting' ? 'Establishing Tunnel' : 'AI Ready'}
             </span>
           </div>
 
           {/* Visualizer Area */}
-          <div className="relative w-48 h-48 flex items-center justify-center">
+          <div className="relative w-56 h-56 flex items-center justify-center">
             {isActive ? (
                 <>
                     {/* Pulsing circles when speaking */}
                     {isSpeaking && (
-                        <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>
+                        <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full animate-ping"></div>
                     )}
-                    <div className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl shadow-blue-500/20 ${isSpeaking ? 'bg-blue-600 scale-110' : 'bg-slate-800'}`}>
-                        {isSpeaking ? <Volume2 size={48} className="text-white animate-bounce" /> : <Mic size={48} className="text-blue-500" />}
+                    <div className={`w-36 h-36 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl shadow-blue-500/20 ${isSpeaking ? 'bg-blue-600 scale-110' : 'bg-slate-800'}`}>
+                        {isSpeaking ? <Volume2 size={56} className="text-white animate-bounce" /> : <Mic size={56} className="text-blue-500" />}
                     </div>
                 </>
             ) : (
-                <div className="w-32 h-32 rounded-full bg-slate-800 flex items-center justify-center border-2 border-dashed border-slate-700">
-                    <Radio size={40} className="text-slate-600" />
+                <div className="w-36 h-36 rounded-full bg-slate-800 flex items-center justify-center border-2 border-dashed border-slate-700">
+                    <Radio size={48} className="text-slate-700" />
                 </div>
             )}
           </div>
 
-          <div className="mt-12 text-center">
+          <div className="mt-12 text-center w-full px-8">
             {status === 'idle' && (
                 <button 
                   onClick={startSession}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-bold shadow-xl shadow-blue-900/20 flex items-center gap-3 transition-transform active:scale-95"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-blue-900/40 flex items-center gap-3 transition-all active:scale-95 mx-auto"
                 >
-                  <PlayCircle size={24} /> Start Live Session
+                  <PlayCircle size={20} /> Initialize Voice Session
                 </button>
             )}
             {status === 'connecting' && (
-                <div className="flex flex-col items-center gap-3">
-                    <Loader2 size={32} className="text-blue-500 animate-spin" />
-                    <span className="text-slate-400 font-medium">Connecting to Gemini...</span>
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 size={40} className="text-blue-500 animate-spin" />
+                    <span className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Calling Gemini...</span>
                 </div>
             )}
             {status === 'active' && (
                 <button 
                   onClick={stopSession}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 px-8 py-3 rounded-full font-bold flex items-center gap-3 transition-all"
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 transition-all mx-auto"
                 >
-                  <X size={24} /> End Session
+                  <X size={20} /> Disconnect
                 </button>
             )}
-            {status === 'error' && (
-                <div className="space-y-4">
-                    <p className="text-red-400 font-medium">Unable to establish connection.</p>
-                    <button onClick={startSession} className="text-blue-400 underline font-bold">Try Again</button>
-                </div>
-            )}
+            
+            {/* Quick Suggestions at the bottom of the active zone */}
+            <div className="mt-10 pt-8 border-t border-slate-800/50 w-full overflow-x-auto no-scrollbar pb-2">
+               <div className="flex gap-3 justify-center min-w-max">
+                 {SUGGESTIONS.map((s, idx) => (
+                    <button key={idx} className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold border border-slate-700 transition-all active:scale-95 flex items-center gap-2">
+                       <Sparkles size={12} className="text-blue-500" /> {s}
+                    </button>
+                 ))}
+               </div>
+            </div>
           </div>
         </div>
 
         {/* Right Side: Transcript/Status */}
-        <div className="w-full md:w-80 bg-white border-l border-slate-100 p-6 flex flex-col">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <MessageSquare size={16} /> Recent Activity
+        <div className="w-full md:w-96 bg-white border-l border-slate-100 p-8 flex flex-col">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-3">
+                <MessageSquare size={16} className="text-blue-600" /> AI Log History
             </h3>
             
-            <div className="flex-1 overflow-y-auto space-y-4 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto space-y-5 scrollbar-thin pr-2">
                 {transcript.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-300 text-center px-4">
-                        <Loader2 size={32} className="opacity-10 mb-2" />
-                        <p className="text-xs italic">Start a session to see real-time interaction logs</p>
+                    <div className="h-full flex flex-col items-center justify-center text-slate-300 text-center px-6">
+                        <div className="p-4 bg-slate-50 rounded-3xl mb-4"><Loader2 size={40} className="opacity-10" /></div>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Awaiting Interaction</p>
                     </div>
                 ) : (
                     transcript.map((line, i) => (
-                        <div key={i} className={`p-3 rounded-2xl text-xs ${line.startsWith('AI:') ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600'}`}>
-                            <span className="font-bold block mb-1 opacity-50 uppercase tracking-tighter">
-                                {line.startsWith('AI:') ? 'Assistant' : 'You'}
+                        <div key={i} className={`p-5 rounded-[2rem] text-sm animate-in slide-in-from-right-4 ${line.startsWith('AI:') ? 'bg-blue-50 text-blue-900 border border-blue-100' : 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
+                            <span className="font-black text-[9px] block mb-2 uppercase tracking-widest opacity-40">
+                                {line.startsWith('AI:') ? 'Easy School AI' : 'System Administrator'}
                             </span>
-                            {line.replace('AI: ', '')}
+                            <p className="leading-relaxed">{line.replace('AI: ', '')}</p>
                         </div>
                     ))
                 )}
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-100">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                        <Mic size={16} />
+            <div className="mt-8 pt-8 border-t border-slate-100">
+                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 border border-slate-200">
+                        <Mic size={20} />
                     </div>
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">Input Device</span>
-                        <p className="text-xs font-semibold text-slate-700 truncate max-w-[150px]">Default Microphone</p>
+                    <div className="flex-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mic Status</span>
+                        <p className="text-xs font-black text-slate-800 uppercase tracking-tight truncate">System Optimized</p>
                     </div>
                 </div>
             </div>
@@ -292,25 +303,25 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({ schoolProfile }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-start gap-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Loader2 size={24} className="animate-spin-slow" /></div>
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-start gap-5 transition-transform hover:-translate-y-1">
+            <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl shadow-inner"><Sparkles size={24} /></div>
             <div>
-                <h4 className="font-bold text-slate-800 text-sm">Low Latency</h4>
-                <p className="text-xs text-slate-500 mt-1">Talk naturally without waiting for standard text generation.</p>
+                <h4 className="font-black text-slate-800 text-xs uppercase tracking-widest">Real-time Advice</h4>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">Ask about school policies or record management workflows.</p>
             </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-start gap-4">
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><MicOff size={24} /></div>
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-start gap-5 transition-transform hover:-translate-y-1">
+            <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl shadow-inner"><MicOff size={24} /></div>
             <div>
-                <h4 className="font-bold text-slate-800 text-sm">Privacy Controlled</h4>
-                <p className="text-xs text-slate-500 mt-1">Your microphone is only active when the session is started.</p>
+                <h4 className="font-black text-slate-800 text-xs uppercase tracking-widest">Secure Audio</h4>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">Processing is local and session-based for your security.</p>
             </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-start gap-4">
-            <div className="p-3 bg-green-50 text-green-600 rounded-2xl"><Volume2 size={24} /></div>
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-start gap-5 transition-transform hover:-translate-y-1">
+            <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shadow-inner"><Volume2 size={24} /></div>
             <div>
-                <h4 className="font-bold text-slate-800 text-sm">Voice Output</h4>
-                <p className="text-xs text-slate-500 mt-1">Receive spoken guidance from a friendly AI school consultant.</p>
+                <h4 className="font-black text-slate-800 text-xs uppercase tracking-widest">Voice Guidance</h4>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">Human-like spoken responses for a natural administrative assistant.</p>
             </div>
         </div>
       </div>

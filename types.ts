@@ -11,6 +11,7 @@ export interface Settings {
   idSeparator: string; // e.g., "-", "/"
   idStartNumber: number; // e.g., 101
   idPadding: number; // e.g., 3 (for 001)
+  idPattern: string; // e.g., "[PREFIX]/[YEAR]/[SERIAL]"
   includeClassInId: boolean;
   includeDateInId: boolean;
 }
